@@ -15,7 +15,6 @@ from keras import backend as K
 import keras
 import numpy as np
 import pandas as pd
-import cv2
 import os
 import glob
 import math
@@ -44,16 +43,16 @@ def shuffle_2(a, b): # Shuffles 2 arrays with the same order
 
 X_train, Y_train, feature_names = load_TrainingData('./train.tsv')
 X_test,X_test_PhraseID = load_TestingData('./test.tsv')
-print '============================== Training data shapes =============================='
-print 'X_train.shape is ', X_train.shape
-print 'Y_train.shape is ',Y_train.shape
+print('============================== Training data shapes ==============================')
+print('X_train.shape is ', X_train.shape)
+print('Y_train.shape is ',Y_train.shape)
 
 
 Tokenizer = Tokenizer()
 Tokenizer.fit_on_texts(np.concatenate((X_train, X_test), axis=0))
 # Tokenizer.fit_on_texts(X_train)
 Tokenizer_vocab_size = len(Tokenizer.word_index) + 1
-print "Vocab size",Tokenizer_vocab_size
+print("Vocab size",Tokenizer_vocab_size)
 
 #masking
 num_test = 32000
@@ -92,30 +91,30 @@ Y_Val   = keras.utils.to_categorical(Y_Val, 5)
 #shuffling the traing Set
 shuffle_2(X_Train_encodedPadded_words,Y_train)
 
-print 'Featu are ',feature_names
-print '============================== After extracting a validation set of '+ str(num_test)+' ============================== '
-print '============================== Training data shapes =============================='
-print 'X_train.shape is ', X_train.shape
-print 'Y_train.shape is ',Y_train.shape
-print '============================== Validation data shapes =============================='
-print 'Y_Val.shape is ',Y_Val.shape
-print 'X_Val.shape is ', X_Val.shape
-print '============================== Test data shape =============================='
-print 'X_test.shape is ', X_test.shape
+print('Feature ',feature_names)
+print('============================== After extracting a validation set of '+ str(num_test)+' ============================== ')
+print('============================== Training data shapes ==============================')
+print('X_train.shape is ', X_train.shape)
+print('Y_train.shape is ',Y_train.shape)
+print('============================== Validation data shapes ==============================')
+print('Y_Val.shape is ',Y_Val.shape)
+print('X_Val.shape is ', X_Val.shape)
+print('============================== Test data shape ==============================')
+print('X_test.shape is ', X_test.shape)
 
 
 
 
 
-print '============================== After padding all text to same size of '+ str(maxWordCount)+' =============================='
-print '============================== Training data shapes =============================='
-print 'X_train.shape is ', X_train.shape
-print 'Y_train.shape is ',Y_train.shape
-print '============================== Validation data shapes =============================='
-print 'Y_Val.shape is ',Y_Val.shape
-print 'X_Val.shape is ', X_Val.shape
-print '============================== Test data shape =============================='
-print 'X_test.shape is ', X_test.shape
+print('============================== After padding all text to same size of '+ str(maxWordCount)+' ==============================')
+print('============================== Training data shapes ==============================')
+print('X_train.shape is ', X_train.shape)
+print('Y_train.shape is ',Y_train.shape)
+print('============================== Validation data shapes ==============================')
+print('Y_Val.shape is ',Y_Val.shape)
+print('X_Val.shape is ', X_Val.shape)
+print('============================== Test data shape ==============================')
+print('X_test.shape is ', X_test.shape)
 
 #model
 model = Sequential()
@@ -127,12 +126,12 @@ model.add(Embedding(maxDictionary_size, 32, input_length=maxWordCount)) #to chan
 # model.add(Conv1D(filters=32, kernel_size=2, padding='same', activation='relu'))
 # model.add(MaxPooling1D(pool_size=2))
  #hidden layers
-model.add(LSTM(10))
+model.add(LSTM(50))
 # model.add(Flatten())
 model.add(Dropout(0.6))
-model.add(Dense(1200, activation='relu',W_constraint=maxnorm(1)))
+model.add(Dense(50, activation='relu',W_constraint=maxnorm(1)))
 # model.add(Dropout(0.6))
-model.add(Dense(500, activation='relu',W_constraint=maxnorm(1)))
+model.add(Dense(50, activation='relu',W_constraint=maxnorm(1)))
 
 # model.add(Dropout(0.5))
  #output layer
@@ -145,7 +144,7 @@ model.summary()
 
 
 learning_rate=0.0001
-epochs = 60
+epochs = 1
 batch_size = 32 #32
 sgd = SGD(lr=learning_rate, nesterov=True, momentum=0.7, decay=1e-4)
 Nadam = keras.optimizers.Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
@@ -160,19 +159,18 @@ earlyStopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=6, verbo
 # Loading best weights
 # model.load_weights("./weights/weights_19.hdf5")
 
-print ("=============================== Training =========================================")
+print(("=============================== Training ========================================="))
 
 # # uncommit this to train
 # # tensorboard --logdir=./logs
 
-history  = model.fit(X_Train_encodedPadded_words, Y_train, epochs = epochs, batch_size=batch_size, verbose=1,
-                    validation_data=(X_Val_encodedPadded_words, Y_Val), callbacks=[tensorboard, reduce_lr,checkpointer,earlyStopping])
+history  = model.fit(X_Train_encodedPadded_words, Y_train, epochs = epochs, batch_size=batch_size, verbose=1, validation_data=(X_Val_encodedPadded_words, Y_Val), callbacks=[tensorboard, reduce_lr, checkpointer, earlyStopping])
 
-print ("=============================== Score =========================================")
+print(("=============================== Score ========================================="))
 
 scores = model.evaluate(X_Val_encodedPadded_words, Y_Val, verbose=0)
 print("Accuracy: %.2f%%" % (scores[1]*100))
-print ("=============================== Predicting =========================================")
+print(("=============================== Predicting ========================================="))
 
 f = open('Submission.csv', 'w')
 f.write('PhraseId,Sentiment\n')
@@ -180,13 +178,13 @@ f.write('PhraseId,Sentiment\n')
 
 # predictions = model.predict(X_test_encodedPadded_words)
 predicted_classes = model.predict_classes(X_test_encodedPadded_words, batch_size=batch_size, verbose=1)
-# print np.sum(predicted_classes==Y_Val2)/(1.0*Y_Val2.shape[0])
-# print predicted_classes
+# print(np.sum(predicted_classes==Y_Val2)/(1.0*Y_Val2.shape[0])
+# print(predicted_classes
 # preds = new_model.predict(x)
-# print predicted_classes
+# print(predicted_classes
 for i in range(0,X_test_PhraseID.shape[0]):
     # pred =np.argmax(predictions[i])
     f.write(str(X_test_PhraseID[i])+","+str(predicted_classes[i])+'\n')
-    # print predictions[i],"=>",pred
+    # print(predictions[i],"=>",pred
 
 f.close()
